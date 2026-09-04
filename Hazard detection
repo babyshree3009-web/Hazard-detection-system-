@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>🌍 Smart Environmental Risk Dashboard</title>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <!-- Heatmap -->
+  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+
+  <!-- Chart -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body { margin:0; font-family: 'Segoe UI'; background:#f4f6f9; }
+    #map { height: 50vh; }
+
+    h2 { text-align:center; }
+
+    .alertBox {
+      text-align:center;
+      padding:10px;
+      background:#ffcccc;
+      color:#b30000;
+      font-weight:bold;
+      display:none;
+    }
+
+    .dashboard {
+      display:grid;
+      grid-template-columns: repeat(3,1fr);
+      gap:10px;
+      padding:10px;
+    }
+
+    .card {
+      background:white;
+      padding:12px;
+      border-radius:12px;
+      text-align:center;
+      box-shadow:0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .full {
+      grid-column: span 3;
+    }
+
+    .low {color:green;}
+    .medium {color:orange;}
+    .high {color:red;}
+  </style>
+</head>
+
+<body>
+
+<h2>🌍 Environmental Risk Monitoring System</h2>
+
+<div id="map"></div>
+
+<div id="alertBox" class="alertBox">🚨 HIGH RISK! MOVE TO SAFE LOCATION 🚨</div>
+
+<div class="dashboard">
+
+  <div class="card">📍 Location: <span id="location">--</span></div>
+  <div class="card">🏠 Safe Zone: <span id="safe">--</span></div>
+  <div class="card">📡 Node ID: 1</div>
+
+  <div class="card">🌡️ Temp: <span id="temp">--</span> °C</div>
+  <div class="card">💨 Air Quality: <span id="air">--</span> ppm</div>
+  <div class="card">💧 Water Level: <span id="water">--</span> cm</div>
+  <div class="card">🔥 Fire: <span id="fire">--</span></div>
+  <div class="card">📳 Motion: <span id="motion">--</span></div>
+  <div class="card">⚠️ Risk: <span id="risk">--</span></div>
+
+</div>
+
+<canvas id="chart"></canvas>
+
+<script>
+
+// 🌍 MAP
+var map = L.map('map').setView([13.0827, 80.2707], 11);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
+.addTo(map);
+
+// 📍 NODES
+let nodes = [
+  {lat:13.0827, lng:80.2707, name:"Chennai Central"},
+  {lat:13.10, lng:80.25, name:"Manali"},
+  {lat:13.05, lng:80.30, name:"Besant Nagar"}
+];
+
+// 🏠 SAFE LOCATIONS
+let safeZones = [
+  "Govt School, T Nagar",
+  "Community Hall, Adyar",
+  "Relief Camp, Anna Nagar"
+];
+
+let markers = [];
+let heatLayer;
+
+// 🗺️ DANGER ZONE
+L.polygon([
+  [13.08,80.27],[13.09,80.29],[13.07,80.30]
+], {
+  color:'red',
+  fillColor:'red',
+  fillOpacity:0.4
+}).addTo(map).bindPopup("🔥 Flood Risk Zone");
+
+// 📊 CHART
+var chart = new Chart(document.getElementById('chart'), {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{
+      label: 'Temperature (°C)',
+      data: [],
+      tension:0.4
+    }]
+  }
+});
+
+// 🔄 UPDATE
+function updateSystem(){
+
+  let heatData = [];
+
+  nodes.forEach((node,index)=>{
+
+    let temp = Math.floor(Math.random()*50);
+    let air = Math.floor(Math.random()*300);
+    let water = Math.floor(Math.random()*100);
+    let fire = Math.random()>0.85;
+    let motion = Math.random()>0.7;
+
+    let risk="LOW";
+
+    if(temp>40 || air>200 || water>70 || fire){
+      risk="HIGH";
+    } else if(temp>30 || air>120){
+      risk="MEDIUM";
+    }
+
+    let color = risk=="HIGH"?"red":risk=="MEDIUM"?"orange":"green";
+
+    if(markers[index]) map.removeLayer(markers[index]);
+
+    let marker = L.circleMarker([node.lat,node.lng], {
+      color:color,
+      fillColor:color,
+      fillOpacity:0.9,
+      radius:10
+    }).addTo(map);
+
+    marker.bindPopup(`
+      📍 ${node.name}<br>
+      🌡️ ${temp}°C<br>
+      💨 ${air} ppm<br>
+      💧 ${water} cm<br>
+      Risk: ${risk}
+    `);
+
+    markers[index]=marker;
+
+    let intensity = risk=="HIGH"?1:risk=="MEDIUM"?0.7:0.3;
+    heatData.push([node.lat,node.lng,intensity]);
+
+    // Dashboard (Node 1)
+    if(index==0){
+
+      document.getElementById("location").innerText = node.name;
+
+      let safe = safeZones[Math.floor(Math.random()*safeZones.length)];
+      document.getElementById("safe").innerText = safe;
+
+      document.getElementById("temp").innerText = temp;
+      document.getElementById("air").innerText = air;
+      document.getElementById("water").innerText = water;
+      document.getElementById("fire").innerText = fire?"DETECTED":"SAFE";
+      document.getElementById("motion").innerText = motion?"YES":"NO";
+
+      let riskEl = document.getElementById("risk");
+      riskEl.innerText = risk;
+      riskEl.className = risk.toLowerCase();
+
+      // ALERT
+      document.getElementById("alertBox").style.display =
+        (risk=="HIGH") ? "block":"none";
+    }
+
+  });
+
+  // 🔥 HEATMAP
+  if(heatLayer) map.removeLayer(heatLayer);
+
+  heatLayer = L.heatLayer(heatData,{
+    radius:45,
+    blur:30
+  }).addTo(map);
+}
+
+// LOOP
+function updateAll(){
+  updateSystem();
+
+  let temp = document.getElementById("temp").innerText;
+  let time = new Date().toLocaleTimeString();
+
+  chart.data.labels.push(time);
+  chart.data.datasets[0].data.push(temp);
+
+  if(chart.data.labels.length>12){
+    chart.data.labels.shift();
+    chart.data.datasets[0].data.shift();
+  }
+
+  chart.update();
+}
+
+setInterval(updateAll,3000);
+
+</script>
+
+</body>
+</html>
