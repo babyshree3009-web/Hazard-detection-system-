@@ -1,12 +1,15 @@
   Smart Environmental Safety System
-📌 Project Overview
+---
+  
+Project Overview:
 It is an IoT-based environmental monitoring and alert system designed using ESP32, sensors, and GSM module.  
 It continuously monitors environmental conditions and sends real-time alerts when dangerous situations are detected.
 
 ---
 
-## 🚨 Problem Statement
-Environmental risks like pollution, gas leakage, flood, and temperature rise are increasing.  
+## 🚨 Problem Statement:
+A resilient, Al-powered environmental monitoring network that provides early detection, localized intelligence, and actionable alerts for floods, forest fires, pollution events, and other environmental hazards common in India, enabling authorities and communities to shift from reactive disaster response to proactive risk prevention.
+
 Manual monitoring is not possible everywhere. So we built an automated smart alert system.
 
 ---
@@ -29,7 +32,17 @@ Sensor → ESP32 → Data Processing → Risk Detection → GSM Alert / Output
 
 ## 🧩 Components Used
 - ESP32 Microcontroller  
-- Gas / Temperature / Environmental Sensors  
+-  BME680  temperature, humidity, pressure, air quality 
+
+-MPU6050  vibration, movement, tilt
+
+-MQ 135  air quality, or gas changes
+
+-Ultrasonic HC 04 water level, distance measurement 
+
+-Flame sensor flame, fire indication
+
+
 - GSM Module (for SMS alerts)  
 - Buzzer / LED (optional alert system)  
 - Power Supply  
@@ -47,7 +60,7 @@ Sensor → ESP32 → Data Processing → Risk Detection → GSM Alert / Output
 🔥 Future Improvements
 - AI-based prediction system  
 - Mobile app integration  
-- Cloud dashboard for live monitoring  
+- Dashboard for live monitoring  
 - More sensors for accuracy  
 
 
